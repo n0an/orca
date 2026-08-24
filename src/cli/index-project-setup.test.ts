@@ -616,36 +616,39 @@ describe('orca cli worktree awareness', () => {
   })
 
   it.each([
-    ['an unsupported value', ['--kind', 'worktree']],
-    ['a bare flag with no value', ['--kind']],
-    ['an empty value', ['--kind=']]
-  ])('rejects repo.add %s before calling the runtime', async (_label, kindArgs) => {
-    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
-    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-    const priorExitCode = process.exitCode
+    ['an unsupported value', ['--kind', 'worktree'], '--kind must be git or folder'],
+    ['a bare flag with no value', ['--kind'], '--kind requires a value; it was passed with none.'],
+    ['an empty value', ['--kind='], '--kind requires a value; it was passed with none.']
+  ])(
+    'rejects repo.add %s before calling the runtime',
+    async (_label, kindArgs, expectedMessage) => {
+      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+      const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const priorExitCode = process.exitCode
 
-    await main(
-      [
-        'repo',
-        'add',
-        '--path',
-        '/srv/orca/notes',
-        ...kindArgs,
-        '--pairing-code',
-        'remote-runtime',
-        '--json'
-      ],
-      '/tmp/repo'
-    )
+      await main(
+        [
+          'repo',
+          'add',
+          '--path',
+          '/srv/orca/notes',
+          ...kindArgs,
+          '--pairing-code',
+          'remote-runtime',
+          '--json'
+        ],
+        '/tmp/repo'
+      )
 
-    expect(callMock).not.toHaveBeenCalled()
-    expect([...logSpy.mock.calls, ...errSpy.mock.calls].flat().join('\n')).toContain(
-      '--kind must be git or folder'
-    )
-    expect(process.exitCode).toBe(1)
+      expect(callMock).not.toHaveBeenCalled()
+      expect([...logSpy.mock.calls, ...errSpy.mock.calls].flat().join('\n')).toContain(
+        expectedMessage
+      )
+      expect(process.exitCode).toBe(1)
 
-    process.exitCode = priorExitCode
-  })
+      process.exitCode = priorExitCode
+    }
+  )
 
   // Why: STA-4792 defect 2. `--host runtime:<id>` used to leave the client local, so a Windows
   // destination fell into resolve(cwd, ...) and became a literal directory next to the caller.
