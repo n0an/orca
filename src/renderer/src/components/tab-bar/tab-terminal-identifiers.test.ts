@@ -6,6 +6,8 @@ import { resolveTabAgentSessionId, resolveTabIdentityLeafId } from './tab-termin
 const FOCUSED_LEAF = '11111111-1111-4111-8111-111111111111'
 const SIBLING_LEAF = '22222222-2222-4222-8222-222222222222'
 
+/** Two-pane tab whose focus is the variable under test: `null` stands in for a tab never
+ *  activated, a sibling id for a live focus, an unknown id for a stale one. */
 function splitLayout(activeLeafId: string | null): TerminalLayoutSnapshot {
   return {
     root: {
@@ -19,6 +21,8 @@ function splitLayout(activeLeafId: string | null): TerminalLayoutSnapshot {
   }
 }
 
+/** Session-resolution input with every agent-state map empty by default, so each test names only
+ *  the source it exercises and an unset map cannot silently supply a session. */
 function sessionArgs(overrides: {
   layout?: TerminalLayoutSnapshot
   agentStatusByPaneKey?: Record<string, unknown>
